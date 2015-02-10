@@ -1,0 +1,63 @@
+package exchange
+
+import (
+	logger "github.com/alecthomas/log4go"
+	frame "gw.com.cn/dzhyun/app.frame.git"
+	. "gw.com.cn/dzhyun/sdk.storage.git"
+)
+
+const ()
+
+type StorageSvc struct {
+	storePool *Pool
+}
+
+func NewStorageSvc() *StorageSvc {
+	ea := &StorageSvc{}
+	return ea
+}
+
+func (self *StorageSvc) GetStorePool() *Pool {
+	return self.storePool
+
+}
+
+func (self *StorageSvc) InitStore(address, u, p string) {
+	self.storePool = NewPool(address, u, p)
+	logger.Debug("ExchangeApp::存储: %v", self.storePool)
+}
+
+func (self *StorageSvc) GetGegudongtaiObj(key string) {
+	store := self.storePool.GetStore("")
+	logger.Debug("存储 store:%v", store)
+	if nil != store {
+		oplist := store.NewListOperator(key)
+		defer func() {
+			self.storePool.Release(store)
+			oplist.Close()
+		}()
+		logger.Debug("存储 oplist:%v", oplist)
+		//-1 取最新的行情
+		data, e := oplist.Get(-1)
+		if nil != e {
+			logger.Error(e)
+		}
+		dq := ParsePbQuote(store,data, key)
+		logger.Info("rcv dync quote %s %s %f", dq.Code, dq.MarketCode, dq.NewPrice)
+		App.(*frame.AppMain).AddCustomWork(&RcvQuoteEvent{Obj: dq})
+	}
+}
+
+func (self *StorageSvc) GetGegudongtaiMaimai5(store *Store, key string) map[string][]float64 {
+	if nil != store {
+		oplist := store.NewListOperator(key)
+		logger.Debug("存储 oplist:%v", oplist)
+		//-1 取最新的行情
+		data, e := oplist.Get(-1)
+		if nil != e {
+			logger.Error(e)
+		}
+		return ParseMainmaiQuote(data, key)
+	}
+	return nil
+}

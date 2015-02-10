@@ -1,0 +1,44 @@
+INSTALLPATH=/opt/dockerProject
+PACKAGENAME=app.exchange.tar.gz
+MAINNAME=app.exchange
+
+all: buildversion.go
+	go build -o ${MAINNAME}
+
+buildversion.go:
+	echo package main > buildversion.go
+	echo const BuildVersion = \"`git --no-pager log --pretty="%h" -n 1`\" >> buildversion.go
+
+clean:
+	$(if $(wildcard ${MAINNAME}), rm ${MAINNAME} )
+	$(if $(wildcard ${PACKAGENAME}), rm ${PACKAGENAME} )
+	rm -rf buildversion.go ${MAINNAME} bin etc ${PACKAGENAME} ${MAINNAME}.cfg
+
+
+
+install:
+	test -d ${INSTALLPATH} || mkdir ${INSTALLPATH}
+	cp ./${MAINNAME} ${INSTALLPATH}
+
+package:
+	cp config.json ${MAINNAME}.cfg
+
+	test -e ${MAINNAME} || exit
+	test -e runapp.sh || exit
+	test -e ${MAINNAME}.cfg ||exit
+
+	test -d bin || mkdir bin
+	test -d etc || mkdir etc
+	-rm -f ./bin/${MAINNAME}
+
+	-rm -f ./bin/runapp.sh
+	-rm -f ./etc/${MAINNAME}.cfg
+
+	-rm -f ${PACKAGENAME}
+
+	cp ${MAINNAME} bin
+	cp runapp.sh bin
+	cp ${MAINNAME}.cfg etc
+
+	$(if $(wildcard ${PACKAGENAME}), rm ${PACKAGENAME} )
+	tar zcf ${PACKAGENAME} ${MAINNAME} bin etc

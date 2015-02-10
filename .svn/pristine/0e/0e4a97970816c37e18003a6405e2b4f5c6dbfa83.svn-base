@@ -1,0 +1,110 @@
+package exchange
+
+import (
+	"code.google.com/p/goprotobuf/proto"
+	dzhyun "gw.com.cn/dzhyun/dzhyun.git"
+	. "gw.com.cn/dzhyun/sdk.bus.git"
+	storage "gw.com.cn/dzhyun/sdk.storage.git"
+	"strconv"
+)
+
+func createRequestData(json *JsonNode) *C2M_JSON {
+	pcode := json.GetNodeByName("ProductCode").ValueString
+	marketcode := json.GetNodeByName("MarketCode").ValueString
+	oid := int64(json.GetNodeByName("OrderId").ValueNumber)
+	wtprice := float64(json.GetNodeByName("WtPrice").ValueNumber)
+	bf := int32(json.GetNodeByName("BsFlag").ValueNumber)
+	wtcount := int32(json.GetNodeByName("WtCount").ValueNumber)
+	return &C2M_JSON{ProductCode: pcode, OrderId: oid, BsFlag: bf, WtPrice: wtprice, MarketCode: marketcode, WtCount: wtcount}
+}
+
+const (
+	Mmkey = "MaimaipanDangri"
+)
+
+func ParsePbQuote(store *storage.Store,data []byte, topic string) *DynaQuote {
+	quoteobj := &dzhyun.GeguDongtaiDangri{}
+	proto.Unmarshal(data, quoteobj)
+	newprice, _ := strconv.ParseFloat(strconv.FormatUint(uint64(quoteobj.GetPrice()), 32), 64)
+	mm := AppStore.(*StorageSvc).GetGegudongtaiMaimai5(store,Mmkey + Substr(topic, 17, 8))
+	return &DynaQuote{
+		Code:       Substr(topic, 19, 6),
+		MarketCode: Substr(topic, 17, 2),
+		NewPrice:   newprice,
+		Buy:        mm["buy"],
+		Sell:       mm["sell"],
+	}
+}
+
+func ParseMainmaiQuote(data []byte, topic string) map[string][]float64 {
+	mm := &dzhyun.MaimaipanDangri{}
+	proto.Unmarshal(data, mm)
+	mmarr := make(map[string][]float64)
+	buy := make([]float64, 5)
+
+	buy[0], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituobuyjia1()), 64), 64)
+	buy[1], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituobuyjia2()), 64), 64)
+	buy[2], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituobuyjia3()), 64), 64)
+	buy[3], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituobuyjia4()), 64), 64)
+	buy[4], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituobuyjia5()), 64), 64)
+
+	sell := make([]float64, 5)
+	sell[0], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituoselljia1()), 64), 64)
+	sell[1], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituoselljia2()), 64), 64)
+	sell[2], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituoselljia3()), 64), 64)
+	sell[3], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituoselljia4()), 64), 64)
+	sell[4], _ = strconv.ParseFloat(strconv.FormatUint(uint64(mm.GetWeituoselljia5()), 64), 64)
+
+	mmarr["buy"] = buy
+	mmarr["sell"] = sell
+	return mmarr
+}
+
+func ParseCommonOrder(orderPbObj *C2M_JSON) *CommonOrder {
+	commonOrder := new(CommonOrder)
+	commonOrder.Oid = orderPbObj.OrderId
+	commonOrder.Code = orderPbObj.ProductCode
+	commonOrder.Price = orderPbObj.WtPrice
+	commonOrder.BsFlag = orderPbObj.BsFlag
+	commonOrder.Count = orderPbObj.WtCount
+	commonOrder.OrderTime = orderPbObj.WTtime
+	commonOrder.MarketCode = orderPbObj.MarketCode
+	return commonOrder
+}
+
+func Reply(socket *BusResponse, respCode uint32) {
+	data := new(dzhyun.BusResponse)
+	data.Result = proto.Uint32(respCode)
+	data.GetDataResult = make([]byte, 1)
+	socket.Send(data)
+}
+
+func Substr(str string, start, length int) string {
+	rs := []rune(str)
+	rl := len(rs)
+	end := 0
+
+	if start < 0 {
+		start = rl - 1 + start
+	}
+	end = start + length
+
+	if start > end {
+		start, end = end, start
+	}
+
+	if start < 0 {
+		start = 0
+	}
+	if start > rl {
+		start = rl
+	}
+	if end < 0 {
+		end = 0
+	}
+	if end > rl {
+		end = rl
+	}
+
+	return string(rs[start:end])
+}

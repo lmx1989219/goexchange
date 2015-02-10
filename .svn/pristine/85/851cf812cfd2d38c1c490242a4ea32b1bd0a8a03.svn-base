@@ -1,0 +1,44 @@
+{
+	"Sds":{
+		"Address_":["tcp://10.15.144.101:10300"],
+		"Default_":{
+			"Routers":["tcp://10.15.107.246:10101"],
+			"Pubers":["tcp://10.15.107.246:10201"],
+			"Subers":["tcp://10.15.107.246:10202"]
+		},
+		"Enable":{
+			"Routers":true,
+			"Pubers":true,
+			"Subers":true
+		}
+	},
+	"Storage":{
+		"Address_":"10.15.107.103:6379",
+		"User":"",
+		"Password":"",
+		"TimeZone":8,
+		"Connections":64
+	},
+	"Workframe":{
+		"Workers":128,
+		"Workchansize":100
+	},
+	"Login":{
+		"Prefix":"/bus/login",
+		"Service":"/root/app/dzhexchange"
+	},
+	"ExitAfterPanic":false,
+	"Cache":{
+		"Enable":true,
+		"IntervalMilli":0,
+		"TradeHour":2,
+		"BlockSize":200,
+		"CapSizeInc":50
+	},
+	"Status":{
+		"Enable":false
+	},
+	"Trade":{
+		
+	}
+}

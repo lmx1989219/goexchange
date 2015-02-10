@@ -1,0 +1,33 @@
+package exchange
+
+import (
+	l4g "github.com/alecthomas/log4go"
+)
+
+type RequestHandler struct {
+	mh *MatchHandler
+}
+
+func NewReqHandler() *RequestHandler {
+	return &RequestHandler{}
+}
+
+/**
+* 按照市场类型定制不同的撮合队列
+ */
+func (reqhand *RequestHandler) SetMatchHandler(mhandler *MatchHandler) {
+	reqhand.mh = mhandler
+}
+
+//委托下单
+func (reqhand *RequestHandler) DoXd(co *CommonOrder) bool {
+	l4g.Debug("下单: %s ", co.Code)
+	reqhand.mh.GetMatchQueue(co.Code).InsertOrder(co)
+	return true
+}
+
+//委托撤单
+func (reqhand *RequestHandler) DoCd(co *CommonOrder) bool {
+	l4g.Debug("撤单: %s ", co.Code)
+	return reqhand.mh.GetMatchQueue(co.Code).RemoveOrderByObj(co)
+}

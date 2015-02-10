@@ -1,0 +1,91 @@
+package exchange
+
+import (
+	"container/list"
+)
+
+const (
+	WTXD = "9990" //委托下单
+	WTCD = "9991" //撤单
+)
+
+type CommonOrder struct {
+	Oid        int64   //订单id
+	Price      float64 //订单价格
+	Code       string  //合约代码
+	Name       string  //合约名称
+	BsFlag     int32   //买卖标记
+	Count      int32   //数量
+	MarketCode string  //市场代码
+	OrderTime  string  //下单时间
+}
+
+type DynaQuote struct {
+	Code       string    //合约代码
+	Name       string    //合约名称
+	MarketCode string    //市场代码
+	
+	Buy        []float64 //买档
+	Sell       []float64 //卖档
+
+	NewPrice    float64 //最新价
+	LastClose   float64 //昨收价
+	SettlePrice float64 //收盘价
+
+	QuoteTime string //行情时间
+}
+
+type MatchQueue struct {
+	BuyQueue  map[*CommonKey]*CommonOrder //should be implement sorted map desc
+	SellQueue map[*CommonKey]*CommonOrder //should be implement sorted map asc
+}
+
+type MatchList struct {
+	BuyList  list.List //sorted list asc
+	SellList list.List //sorted list desc
+}
+
+type CommonKey struct {
+	Oid   int64
+	Price float64
+}
+
+type Contracts struct {
+	Code string //合约代码
+	Name string //合约名称
+}
+
+type C2M_JSON struct {
+	ProtoNO     string  //协议号
+	UName       string  //用户名
+	MinUnit     float32 //最小变动单位
+	TargetOid   string  //目标单号
+	Spead       float32 //滑点
+	MarketCode  string  //市场代码
+	ProductCode string  //商品代码
+	TFull       float32 //目标止盈
+	TLoss       float32 //目标止损
+	OcFlag      string  //开平标志 1开2平
+	WtPrice     float64 //委托价
+	WtCount     int32   //委托量
+	Full        float32 //止盈
+	Loss        float32 //止损
+	GameId      string  //大赛id
+	BsFlag      int32   //买卖标记 1买2卖
+	OrderType   int32   //订单类型
+	OrderId     int64   //订单id
+	Ext1        string  //滑点
+	Ext2        string  //保留
+	WTtime      string  //交易时间 yyyy-MM-dd HH:mm:ss
+}
+
+type M2C_JSON struct {
+	Code       int32   //协议号
+	DealPrice  float32 //用户名
+	DealCount  int32   //最小变动单位
+	MarketCode string  //目标单号
+	UserName   string  //滑点
+	OrderId    int64   //市场代码
+	DealType   int32   //商品代码
+	GameId     string  //大赛id
+}
