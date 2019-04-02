@@ -183,11 +183,12 @@ func (stm *StkMatchList) RemoveOrderByObj(c *CommonOrder) bool {
 }
 
 func (stm *StkMatchList) RemoveAll() {
-	for e := stm.List.BuyList.Front(); e != nil; e = e.Next() {
+	var n *list.Element
+	for e := stm.List.BuyList.Front(); e != nil; e = n {
 		stm.List.BuyList.Remove(e)
 
 	}
-	for e := stm.List.SellList.Front(); e != nil; e = e.Next() {
+	for e := stm.List.SellList.Front(); e != nil; e = n {
 		stm.List.SellList.Remove(e)
 	}
 	for k,_ := range stm.codesMap {
